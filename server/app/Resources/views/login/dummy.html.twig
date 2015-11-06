@@ -1,0 +1,12 @@
+<script>
+window.onload = function(){
+  document.forms['sso'].submit()
+
+}
+</script>
+<form action="{{ url }}" method="post" name="sso">
+    <input type="hidden" name="id" value="{{ id }}" />
+    <input type="hidden" name="name" value="{{ name }}" />
+    <input type="hidden" name="token" value="{{ token }}" />
+    <input type="submit" value="submit" name="mem_type" border="0">
+</form>
