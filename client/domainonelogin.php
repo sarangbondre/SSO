@@ -8,15 +8,21 @@
 <h2>Login Form ONE</h2>
 <?php
 
+/*
+ * Owner: 123.sarang@gmail.com
+ * Created on: 6 Nov 2015
+ * Description: This is the client file which need to be placed on the client domain OR you can write the simmiler code from this file as per your requirement in you project for the single sign on
+ * Get the token from the SSO and store it in the cookie, if token does not exist then redirect it to the SSO server for the authentication procedd
+ */
+
 if(!empty($_POST)) {
 	$id = $_POST['id'];
 	$token = $_POST['token'];
 	$int = 3600 * 24 * 1;
 	setcookie('ssoid',$id,time()+$int,'/',false);
 	setcookie('ssotoken',$token,time()+$int,'/',false);
-	$postredirect = "http://domainone.local/domainoneloginsuccess.php";\
+	$postredirect = "http://domainone.local/domainoneloginsuccess.php";
 	header('Location:'.$postredirect);
-	//header('Location: http://www.example.com/');
 	exit;
 } else {
 	if(!empty($_COOKIE['ssotoken'])) {
@@ -33,13 +39,18 @@ if(!empty($_POST)) {
 			header('Location:'.$loginURL);
 		}		
 	} else {
-		//$redirectURL = "http://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]";
 		$redirectURL = "http://domainone.local/domainonelogin.php";
 		$loginURL = 'http://localhost/login/web/app_dev.php/loginauth?redirect='.$redirectURL;
 		header('Location:'.$loginURL);
 	}
 }
 
+/*
+ * Function
+ * Call Api is the common function called for the API, for POST, PUT and get method
+ * @input param: Method (GET, PUT, POST), URL, Data in array format
+ * @output: Json string
+ */
 function CallAPI($method, $url, $data = false)
 {
 	$curl = curl_init();
