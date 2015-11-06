@@ -1,0 +1,2 @@
+# SSO
+Single sign on is the application where multiple application can be accessed with the single login credential, It also has the feature that if the user is logged in to one of the application which is bind to the same SSO than user can access the other application with again type in the login  credential, Same as if we login to gmail we don't need to put the login details again to login for the youtube
