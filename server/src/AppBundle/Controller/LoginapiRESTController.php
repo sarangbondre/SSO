@@ -54,34 +54,34 @@ class LoginapiRESTController extends VoryxController
     public function cgetAction(ParamFetcherInterface $paramFetcher)
     {
 
-	$filters = !is_null($paramFetcher->get('filters')) ? $paramFetcher->get('filters') : array();
-    $baseApiURL = 'http://localhost/login/web/app_dev.php/api/users';
-	if(!empty($filters['login'])) {
-		if(!empty($filters['redirect'])) {
-			$redirectURL = $filters['redirect'];
-		}
-//echo 'm i inn : <pre>';print_r($_COOKIE);
-		if(!empty($_COOKIE['SSOkey'])) {
-//echo 'm inn';exit;
-			
-			$token = $_COOKIE['SSOkey'];
-			$filters="?filters[token]=$token";
-			$method = 'GET';
-			$url = $baseApiURL.$filters;
-			$responseAPI = $this->CallAPI($method, $url);
-			if(!empty($responseAPI)) {
-			    $redirectURL = $redirectURL.'?login=1';
-			} else {
-				$redirectURL = "http://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]/login?redirect=".$redirectURL;
-			}
-		} else {
-//echo 'm else ';exit;
-		    //return 'Something';
-		    //$redirectURL = "http://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]/login?redirect=".$redirectURL;
-		}
-		header('Location:'.$redirectURL);
-		//return $this->redirect($redirectURL);	
-	} else if(!empty($filters['logout'])) {
+    	$filters = !is_null($paramFetcher->get('filters')) ? $paramFetcher->get('filters') : array();
+        $baseApiURL = $this->container->getParameter('base_api_url');
+        $cookieName = $this->container->getParameter('cookie_name');
+        $int = $this->container->getParameter('cookie_expire_time');
+
+        if(!empty($filters['login'])) {
+            $username = $filters['username'];
+            $password = $filters['password'];
+            $filters="?filters[username]=$username&filters[password]=$password";
+            $method = 'GET';
+            $url = $baseApiURL.$filters;
+            $responseAPI = $this->CallAPI($method, $url);
+            if(!empty($responseAPI)) {
+                $responseData = json_decode($responseAPI);
+                $responseData = $responseData[0];
+                $responseId = $responseData->id;
+                $responseName = $responseData->name;
+                $token = sha1($username.$password);
+                $method = 'PUT';
+                $data['token'] = $token;
+                $url = $baseApiURL.'/'.$responseId;
+                $responseAPI = $this->CallAPI($method, $url, $data);
+                setcookie($cookieName,$token,time()+$int,'/',false);
+                return $responseAPI;
+            } else {
+                return FOSView::create('Not able to validate username and password', Codes::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        } else if(!empty($filters['logout'])) {
             unset($_COOKIE['SSOkey']);
             setcookie('SSOkey', '' , time() - 3600,'/');            
             $id=$filters['logout'];
@@ -95,7 +95,34 @@ class LoginapiRESTController extends VoryxController
                 } else {
                         return FOSView::create('Not a valid ID', Codes::HTTP_INTERNAL_SERVER_ERROR);
                 }
-        } 
+        } else if(!empty($filters['token'])) {
+            $token = $filters['token'];
+            $filters="?filters[token]=$token";
+            $method = 'GET';
+            $url = $baseApiURL.$filters;
+            $responseAPI = $this->CallAPI($method, $url);            
+            if(!empty($responseAPI)) {                
+                if(isset($_COOKIE[$cookieName])) {
+                    setcookie($cookieName,$token,time()+$int,'/',false);
+                    $responseAPI = json_decode($responseAPI);
+                    $responseAPI = $responseAPI[0];
+                    $responseData['status'] = 0;
+                    $responseData['code'] = 403;
+                    $responseData['message'] = 'Token expired';
+                    $responseData['id'] = $responseAPI->id;
+                    $responseData['name'] = $responseAPI->name;
+                    $responseData['username'] = $responseAPI->username;
+                    $responseData['email'] = $responseAPI->email;
+                    $responseData['token'] = $responseAPI->token;
+                    $responseAPI = $responseData;
+                }
+            } else {
+                $responseAPI['status'] = 0;
+                $responseAPI['code'] = 403;
+                $responseAPI['message'] = 'Token expired';
+            }
+            return $responseAPI;
+        }
         /*try {
             $offset = $paramFetcher->get('offset');
             $limit = $paramFetcher->get('limit');

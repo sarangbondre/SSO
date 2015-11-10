@@ -24,7 +24,7 @@ class RedirectController extends Controller
         $expireTime = time()+$this->container->getParameter('cookie_expire_time');
         $expirePath = $this->container->getParameter('cookie_path');
         $loginURL = $this->container->getParameter('login_url');
-        $baseApiURL = $this->container->getParameter('base_api_url');
+        $baseApiURL = $this->container->getParameter('base_login_api_url');
         $redirectURL = $request->getUri();
         $message = 'Congrats you are successfully logged inn.';
 
@@ -35,16 +35,16 @@ class RedirectController extends Controller
             $int = $expireTime;
             setcookie($ssoId,$id,time()+$int,'/',false);
             setcookie($ssoToken,$token,time()+$int,'/',false);
-            $postredirect = "http://$_SERVER[HTTP_HOST]".$this->container->get('router')->getContext()->getBaseUrl()."/domainoneloginsuccess.php";
-            // header('Location:'.$postredirect);
         } else if(!empty($_COOKIE['ssotoken'])) {
             $id=$_COOKIE['ssoid'];
             $token=$_COOKIE['ssotoken'];
             $filters="?filters[token]=$token";
-            $method = 'GET';
+            $method = 'GET';            
             $url = $baseApiURL.$filters;
+            // echo $url;
             $responseAPI = $this->CallAPI($method, $url);
-            if(empty($responseAPI)) {
+            $responseAPI = json_decode($responseAPI);
+            if(isset($responseAPI->status) && $responseAPI->status == 0) {
                 $loginURL = $loginURL.'?redirect='.$redirectURL;
                 return new RedirectResponse($loginURL);
             }

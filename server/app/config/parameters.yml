@@ -10,4 +10,7 @@ parameters:
     mailer_user: null
     mailer_password: null
     secret: d89f0ab704023a10c658c9d5cb097f54fc8e6353
-    base_api_url: http://localhost/gitsso/SSO/server/web/app_dev.php/api/users    
+    base_api_url: http://localhost/gitsso/SSO/server/web/app_dev.php/api/users
+    base_login_api_url: http://localhost/gitsso/SSO/server/web/app_dev.php/api/loginapis
+    cookie_name: SSOkey
+    cookie_expire_time: 3600*24*1

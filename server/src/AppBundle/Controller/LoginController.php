@@ -17,7 +17,8 @@ class LoginController extends Controller
     {
 		$errormsg = $lastUsername = $error = '';
 		//Initialized the base URL
-		$baseApiURL = $this->container->getParameter('base_api_url');
+		$baseApiURL = $this->container->getParameter('base_login_api_url');
+		$cookieName = $this->container->getParameter('cookie_name');
 		if ($request->getMethod() == 'POST') {
 			$data = $request->request->all();
 			$lastUsername = $username = $data['_username'];
@@ -26,29 +27,20 @@ class LoginController extends Controller
 				$errormsg = 'Username or password field cannot be empty';
 				$error = '';
 			} else {
-				$filters="?filters[username]=$username&filters[password]=$password";
+				$filters="?filters[login]=1&filters[username]=$username&filters[password]=$password";
 				$method = 'GET';
 				$url = $baseApiURL.$filters;
 				$responseAPI = $this->CallAPI($method, $url);
 				if(!empty($responseAPI)) {
 					$responseData = json_decode($responseAPI);
-					$responseData = $responseData[0];
+					$responseData = json_decode($responseData);
 					$responseId = $responseData->id;
 					$responseName = $responseData->name;
-					$errormsg = 'Congrats you are Authorised';
-					$int = 3600 * 24 * 1;
-					$token = sha1($username.$password);
-					$method = 'PUT';
-					$data['token'] = $token;
-					$url = $baseApiURL.'/'.$responseId;
-					$responseAPI = $this->CallAPI($method, $url, $data);
-					$cookieName = 'SSOkey';
-					setcookie($cookieName,$token,time()+$int,'/',false);
+					$token = $responseData->token;
 					$redirectURL = $_GET['redirect'];
 					return $this->render(
 						'login/dummy.html.twig',
 						array(
-						    // last username entered by the user
 						    'name' 	=> $responseName,
 						    'id'    => $responseId,
 						    'token' => $token,
@@ -59,8 +51,8 @@ class LoginController extends Controller
 					$errormsg = 'Sorry, Am not able to identify you';
 				}
 			}
-		} else if(!empty($_COOKIE)) {
-			$token = $_COOKIE['SSOkey'];
+		} else if(!empty($_COOKIE[$cookieName])) {
+			$token = $_COOKIE[$cookieName];
 			$filters="?filters[token]=$token";
 			$method = 'GET';
 			$url = $baseApiURL.$filters;
