@@ -17,9 +17,8 @@ class LoginController extends Controller
     {
 		$errormsg = $lastUsername = $error = '';
 		//Initialized the base URL
-		$baseApiURL = 'http://localhost/login/web/app_dev.php/api/users';
-
-		if ($request->getMethod() == 'POST') {		
+		$baseApiURL = $this->container->getParameter('base_api_url');
+		if ($request->getMethod() == 'POST') {
 			$data = $request->request->all();
 			$lastUsername = $username = $data['_username'];
 			$password = $data['_password'];
@@ -88,7 +87,7 @@ class LoginController extends Controller
 					    'url' 	=> $redirectURL
 					));
 			}
-		}
+		}		
 		return $this->render(
 			'login/index.html.twig',
 			array(
@@ -107,7 +106,7 @@ class LoginController extends Controller
     {    	
 		$redirectURL = $_GET['redirect'];
 		if(!empty($_COOKIE['SSOkey'])) {
-			$baseApiURL = 'http://localhost/login/web/app_dev.php/api/users';
+			$baseApiURL = $this->container->getParameter('base_api_url');			
 			$token = $_COOKIE['SSOkey'];
 			$filters="?filters[token]=$token";
 			$method = 'GET';
@@ -124,10 +123,10 @@ class LoginController extends Controller
 					'login/dummy.html.twig',
 					array(
 					    // last username entered by the user
-					    'name' => $responseName,
-					    'id'         => $responseId,
-					    'token'	    => $token,
-					    'url' => $redirectURL
+					    'name' 	=> $responseName,
+					    'id'	=> $responseId,
+					    'token'	=> $token,
+					    'url' 	=> $redirectURL
 					));
 			} else {
 				$redirectURL = "http://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]/login?redirect=".$redirectURL;
